@@ -377,13 +377,19 @@ logistic model trained over the video-level features. Please look at the
 ### Using Audioset
 
 Run the following command to train:
-```python train.py --train_data_pattern=audioset_v1_embeddings/bal_train/*.tfrecord --feature_names=audio_embedding --feature_sizes=128 --model=FrameLevelLogisticModel --frame_features=True --train_dir=tmp/frame_level_logistic_model --export_model_steps=90```
+```
+python train.py --train_data_pattern=audioset_v1_embeddings/bal_train/*.tfrecord --feature_names=audio_embedding --feature_sizes=128 --model=FrameLevelLogisticModel --frame_features=True --train_dir=tmp/frame_level_logistic_model --export_model_steps=90
+```
 
 And run the following command to eval:
-```python train.py --train_dir=tmp/frame_level_logistic_model --eval_data_pattern=audioset_v1_embeddings/eval/*.tfrecord --feature_names=audio_embedding --feature_sizes=128 --model=FrameLevelLogisticModel --frame_features=True```
+```
+python train.py --train_dir=tmp/frame_level_logistic_model --eval_data_pattern=audioset_v1_embeddings/eval/*.tfrecord --feature_names=audio_embedding --feature_sizes=128 --model=FrameLevelLogisticModel --frame_features=True
+```
 
 And the following command to infer:
-```python inference.py --train_dir=tmp/frame_level_logistic_model --eval_data_pattern=audioset_v1_embeddings/unbal_train/*.tfrecord --feature_names=audio_embedding --feature_sizes=128 --model=FrameLevelLogisticModel --frame_features=True```
+```
+python inference.py --train_dir=tmp/frame_level_logistic_model --eval_data_pattern=audioset_v1_embeddings/unbal_train/*.tfrecord --feature_names=audio_embedding --feature_sizes=128 --model=FrameLevelLogisticModel --frame_features=True
+```
 
 ### Using GPUs
 
