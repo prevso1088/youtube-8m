@@ -77,9 +77,14 @@ class FrameLevelLogisticModel(models.BaseModel):
     avg_pooled = tf.reduce_sum(model_input,
                                axis=[1]) / denominators
 
-    output = slim.fully_connected(
-        avg_pooled, vocab_size, activation_fn=tf.nn.relu,
+    hid = slim.fully_connected(
+        avg_pooled, 1024, activation_fn=tf.nn.relu,
         weights_regularizer=slim.l2_regularizer(1e-8))
+    
+    output = slim.fully_connected(
+        hid, vocab_size, activation_fn=tf.nn.sigmoid,
+        weights_regularizer=slim.l2_regularizer(1e-8))
+    
     return {"predictions": output}
 
 class DbofModel(models.BaseModel):
