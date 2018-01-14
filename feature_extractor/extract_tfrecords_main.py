@@ -35,6 +35,11 @@ import tensorflow as tf
 from tensorflow import app
 from tensorflow import flags
 
+import vggish_input
+import vggish_params
+import vggish_postprocess
+import vggish_slim
+
 FLAGS = flags.FLAGS
 
 # In OpenCV3.X, this is available as cv2.CAP_PROP_POS_MSEC
@@ -50,7 +55,7 @@ if __name__ == '__main__':
                       '<video_file> must be a path of a video and <labels> '
                       'must be an integer list joined with semi-colon ";"')
   # Optional flags.
-  flags.DEFINE_string('model_dir', os.path.join(os.getenv('HOME'), 'yt8m'),
+  flags.DEFINE_string('model_dir', os.path.join('c:/', 'yt8m'),
                       'Directory to store model files. It defaults to ~/yt8m')
 
   # The following flags are set to match the YouTube-8M dataset format.
@@ -156,8 +161,22 @@ def main(unused_argv):
         FLAGS.image_feature_key: tf.train.FeatureList(feature=rgb_features),
     }
     if FLAGS.insert_zero_audio_features:
-      feature_list['audio'] = tf.train.FeatureList(
-          feature=[_bytes_feature(_make_bytes([0] * 128))] * len(rgb_features))
+        try:
+            wav_file = video_file + '.wav'
+            examples_batch = vggish_input.wavfile_to_examples(wav_file)
+            pproc = vggish_postprocess.Postprocessor('vggish_pca_params.npz')
+            with tf.Graph().as_default(), tf.Session() as sess:
+			    # Define the model in inference mode, load the checkpoint, and
+                # locate input and output tensors.
+                vggish_slim.define_vggish_slim(training=False)
+                vggish_slim.load_vggish_slim_checkpoint(sess, 'vggish_model.ckpt')
+                features_tensor = sess.graph.get_tensor_by_name(vggish_params.INPUT_TENSOR_NAME)
+                embedding_tensor = sess.graph.get_tensor_by_name(vggish_params.OUTPUT_TENSOR_NAME)
+                [embedding_batch] = sess.run([embedding_tensor], feed_dict={features_tensor: examples_batch})
+                postprocessed_batch = pproc.postprocess(embedding_batch)
+                feature_list['audio'] = tf.train.FeatureList(feature=[tf.train.Feature(bytes_list=tf.train.BytesList(value=[embedding.tobytes()])) for embedding in postprocessed_batch])
+        except:
+            feature_list['audio'] = tf.train.FeatureList(feature=[_bytes_feature(_make_bytes([0] * 128))] * len(rgb_features))
 
     example = tf.train.SequenceExample(
         context=tf.train.Features(feature={
